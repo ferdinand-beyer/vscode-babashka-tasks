@@ -8,10 +8,10 @@
 
 (def task-type "babashka")
 
-(defn reload
+(defn ^:export reload
   []
   (.log js/console "Reloading...")
-  (js-delete js/require.cache (js/require.resolve "./vs-code")))
+  (js-delete js/require.cache (js/require.resolve "./babashka-tasks")))
 
 (defn- log-error [e]
   (.error js/console "babashka-tasks: An error occurred" e))
@@ -24,16 +24,22 @@
 (defn- subscribe! [disposable]
   (.push (:subscriptions *ctx*) disposable))
 
-(defn- make-execution [_uri name]
-  (vscode/ShellExecution. (str "bb run " name)))
+(defn- make-execution [file task-name]
+  (-> ["bb"]
+      (cond-> file (conj "--config" file))
+      (conj "run" task-name)
+      (->> (str/join " "))
+      (vscode/ShellExecution.)))
 
-(defn- make-task [folder uri name detail]
-  (let [task (vscode/Task. #js {:type task-type
-                                :file uri}
+(defn- make-task [folder uri task-name detail]
+  (let [file (.-fsPath uri)
+        task (vscode/Task. #js {:type task-type
+                                :task task-name
+                                :file file}
                            folder
-                           name
+                           task-name
                            task-type
-                           (make-execution uri name)
+                           (make-execution file task-name)
                            #js [])]
     (when detail
       (set! (.-detail task) detail))
@@ -85,10 +91,15 @@
 (defn- provide-tasks [_token]
   (swap! tasks #(or % (find-all-tasks))))
 
-;; TODO: Create a task from a task definition
 (defn- resolve-task [task _token]
-  (.log js/console "Asked to resolve" task)
-  js/undefined)
+  (let [definition (.-definition task)]
+    (when-let [task-name (.-task definition)]
+      (vscode/Task. definition
+                    (or (.-scope task) (.-Workspace vscode/TaskScope))
+                    task-name
+                    task-type
+                    (make-execution (.-file definition) task-name)
+                    #js []))))
 
 (defn- babashka-task-provider []
   #js {:provideTasks provide-tasks

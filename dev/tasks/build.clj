@@ -1,6 +1,6 @@
 (ns tasks.build
   (:require [babashka.fs :as fs]
-            [tasks.tools :refer [*cwd* npm npx shadow]]))
+            [tasks.tools :refer [npm npx shadow]]))
 
 (defn install []
   (when (seq
