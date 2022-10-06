@@ -6,7 +6,7 @@
         "type": "extensionHost",
         "request": "launch",
         "runtimeExecutable": "${execPath}",
-        "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+        "outFiles": ["${workspaceFolder}/**/*.js"],
         "args": [
           "--extensionDevelopmentPath=${workspaceFolder}",
           "--disable-extensions"

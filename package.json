@@ -7,7 +7,7 @@
     "Other"
   ],
   "keywords": ["babashka", "tasks"],
-  "main": "dist/babashka-tasks.js",
+  "main": "babashka-tasks.js",
   "author": {
     "name": "Ferdinand Beyer"
   },
@@ -22,7 +22,7 @@
     "vscode": "^1.22.0"
   },
   "activationEvents": [
-    "workspaceContains:**/bb.edn"
+    "onCommand:workbench.action.tasks.runTask"
   ],
   "contributes": {
     "taskDefinitions": [

@@ -5,5 +5,5 @@
    :exports-var babashka-tasks.core/exports
    :compiler-options {:infer-externs true
                       :warnings-as-errors true}
-   :output-to "dist/babashka-tasks.js"
+   :output-to "babashka-tasks.js"
    :devtools {:after-load babashka-tasks.core/reload}}}}

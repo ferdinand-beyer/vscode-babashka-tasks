@@ -1,6 +1,6 @@
 {:paths ["src" "resources"]
- :deps {cljs-bean/cljs-bean {:mvn/version "1.8.0"}
-        funcool/promesa     {:mvn/version "8.0.450"}}
+ :deps {applied-science/js-interop {:mvn/version "0.3.3"}
+        funcool/promesa            {:mvn/version "8.0.450"}}
 
  :aliases
  {:dev

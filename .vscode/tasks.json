@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "babashka",
+			"task": "dev",
+			"problemMatcher": [],
+			"label": "babashka: dev",
+			"detail": "Start a development server"
+		}
+	]
+}

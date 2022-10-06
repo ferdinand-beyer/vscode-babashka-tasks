@@ -4,7 +4,7 @@
 .portal/
 .shadow-cljs/
 
-dist/
 node_modules/
 
+*.js
 *.vsix

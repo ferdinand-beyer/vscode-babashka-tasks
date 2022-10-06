@@ -1,7 +1,7 @@
 (ns babashka-tasks.core
   (:require ["util" :as util]
             ["vscode" :as vscode]
-            [cljs-bean.core :refer [bean]]
+            [applied-science.js-interop :as j]
             [clojure.edn :as edn]
             [clojure.string :as str]
             [promesa.core :as p]))
@@ -10,19 +10,19 @@
 
 (defn ^:export reload
   []
-  (.log js/console "Reloading...")
+  (j/call js/console :log "Reloading...")
   (js-delete js/require.cache (js/require.resolve "./babashka-tasks")))
 
 (defn- log-error [e]
-  (.error js/console "babashka-tasks: An error occurred" e))
+  (j/call js/console :error "babashka-tasks: An error occurred" e))
 
 (defn- decode-text [x]
-  (.decode (util/TextDecoder.) x))
+  (j/call (util/TextDecoder.) :decode x))
 
 (def ^:dynamic *ctx* nil)
 
 (defn- subscribe! [disposable]
-  (.push (:subscriptions *ctx*) disposable))
+  (j/push! (j/get *ctx* :subscriptions) disposable))
 
 (defn- make-execution [file task-name]
   (-> ["bb"]
@@ -32,7 +32,7 @@
       (vscode/ShellExecution.)))
 
 (defn- make-task [folder uri task-name detail]
-  (let [file (.-fsPath uri)
+  (let [file (j/get uri :fsPath)
         task (vscode/Task. #js {:type task-type
                                 :task task-name
                                 :file file}
@@ -42,7 +42,7 @@
                            (make-execution file task-name)
                            #js [])]
     (when detail
-      (set! (.-detail task) detail))
+      (j/assoc! task :detail detail))
     task))
 
 (defn- detail [task]
@@ -57,9 +57,9 @@
     (make-task folder uri task-name (detail task))))
 
 (defn- read-file [folder uri]
-  (-> (.. vscode/workspace -fs (readFile uri))
-      (.then #(->> % decode-text edn/read-string (load-bb-edn folder uri)))
-      (.catch log-error)))
+  (-> (j/call-in vscode/workspace [:fs :readFile] uri)
+      (p/then #(->> % decode-text edn/read-string (load-bb-edn folder uri)))
+      (p/catch log-error)))
 
 (defn- pmapcat [f collp]
   (-> collp
@@ -68,11 +68,11 @@
 
 (defn- find-workspace-folder-tasks [folder]
   (->> (vscode/RelativePattern. folder "**/bb.edn")
-       (.findFiles vscode/workspace)
+       (j/call vscode/workspace :findFiles)
        (pmapcat (partial read-file folder))))
 
 (defn- find-all-tasks []
-  (->> (.-workspaceFolders vscode/workspace)
+  (->> (j/get vscode/workspace :workspaceFolders)
        (pmapcat find-workspace-folder-tasks)))
 
 (def tasks (atom nil))
@@ -82,23 +82,23 @@
 
 ;; TODO: Smarter updates?
 (defn- watch-babashka-files! []
-  (doto (.createFileSystemWatcher vscode/workspace "**/bb.edn")
-    (.onDidChange invalidate-tasks!)
-    (.onDidCreate invalidate-tasks!)
-    (.onDidDelete invalidate-tasks!)
+  (doto (j/call vscode/workspace :createFileSystemWatcher "**/bb.edn")
+    (j/call :onDidChange invalidate-tasks!)
+    (j/call :onDidCreate invalidate-tasks!)
+    (j/call :onDidDelete invalidate-tasks!)
     (subscribe!)))
 
 (defn- provide-tasks [_token]
   (swap! tasks #(or % (find-all-tasks))))
 
 (defn- resolve-task [task _token]
-  (let [definition (.-definition task)]
-    (when-let [task-name (.-task definition)]
+  (let [definition (j/get task :definition)]
+    (when-let [task-name (j/get definition :task)]
       (vscode/Task. definition
-                    (or (.-scope task) (.-Workspace vscode/TaskScope))
+                    (or (j/get task :scope) (j/get vscode/TaskScope :Workspace))
                     task-name
                     task-type
-                    (make-execution (.-file definition) task-name)
+                    (make-execution (j/get definition :file) task-name)
                     #js []))))
 
 (defn- babashka-task-provider []
@@ -106,10 +106,10 @@
        :resolveTask  resolve-task})
 
 (defn activate [^js ctx]
-  (set! *ctx* (bean ctx))
+  (set! *ctx* ctx)
   (watch-babashka-files!)
-  (subscribe! (.registerTaskProvider vscode/tasks task-type
-                                     (babashka-task-provider))))
+  (subscribe! (j/call vscode/tasks :registerTaskProvider
+                      task-type (babashka-task-provider))))
 
 (defn deactivate [])
 
