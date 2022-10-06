@@ -1,0 +1,11 @@
+.*/
+.*
+
+dev/
+node_modules/
+src/
+
+*.edn
+*.vsix
+
+package-lock.json

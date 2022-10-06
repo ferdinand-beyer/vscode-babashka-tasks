@@ -12,8 +12,6 @@
 (defn build []
   (install)
   (shadow :release :extension)
-  (binding [*cwd* "extension-vscode"]
-    (npm :ci)
-    (fs/copy "README.md" "extension-vscode/" {:replace-existing true})
-    (fs/copy "LICENSE" "extension-vscode/LICENSE" {:replace-existing true})
-    (npx :vsce :package)))
+  (npx :vsce :package))
+
+(defn -main [] (build))

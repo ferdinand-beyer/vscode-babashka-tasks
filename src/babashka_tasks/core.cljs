@@ -1,9 +1,12 @@
 (ns babashka-tasks.core
   (:require ["util" :as util]
             ["vscode" :as vscode]
-            [promesa.core :as p]
             [cljs-bean.core :refer [bean]]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
+            [clojure.string :as str]
+            [promesa.core :as p]))
+
+(def task-type "babashka")
 
 (defn reload
   []
@@ -21,17 +24,15 @@
 (defn- subscribe! [disposable]
   (.push (:subscriptions *ctx*) disposable))
 
-(def tasks (atom nil))
-
 (defn- make-execution [_uri name]
   (vscode/ShellExecution. (str "bb run " name)))
 
 (defn- make-task [folder uri name detail]
-  (let [task (vscode/Task. #js {:type "babashka"
+  (let [task (vscode/Task. #js {:type task-type
                                 :file uri}
                            folder
                            name
-                           "babashka"
+                           task-type
                            (make-execution uri name)
                            #js [])]
     (when detail
@@ -44,14 +45,14 @@
 
 (defn- load-bb-edn [folder uri data]
   (for [[sym task] (:tasks data)
-        :when (symbol? sym)]
-    (make-task folder uri (name sym) (detail task))))
+        :when (symbol? sym)
+        :let  [task-name (name sym)]
+        :when (not (str/starts-with? task-name "-"))]
+    (make-task folder uri task-name (detail task))))
 
 (defn- read-file [folder uri]
   (-> (.. vscode/workspace -fs (readFile uri))
-      (.then decode-text)
-      (.then edn/read-string)
-      (.then (partial load-bb-edn folder uri))
+      (.then #(->> % decode-text edn/read-string (load-bb-edn folder uri)))
       (.catch log-error)))
 
 (defn- pmapcat [f collp]
@@ -60,43 +61,46 @@
       (p/then #(into-array (eduction cat %)))))
 
 (defn- find-workspace-folder-tasks [folder]
-  (->> (.findFiles vscode/workspace (vscode/RelativePattern. folder "**/bb.edn"))
+  (->> (vscode/RelativePattern. folder "**/bb.edn")
+       (.findFiles vscode/workspace)
        (pmapcat (partial read-file folder))))
 
 (defn- find-all-tasks []
   (->> (.-workspaceFolders vscode/workspace)
        (pmapcat find-workspace-folder-tasks)))
 
-(defn- file-changed [uri] (.log js/console "FILE CHANGED" uri))
-(defn- file-created [uri] (.log js/console "FILE CREATED" uri))
-(defn- file-deleted [uri] (.log js/console "FILE DELETED" uri))
+(def tasks (atom nil))
+
+(defn- invalidate-tasks! [_uri]
+  (reset! tasks nil))
+
+;; TODO: Smarter updates?
+(defn- watch-babashka-files! []
+  (doto (.createFileSystemWatcher vscode/workspace "**/bb.edn")
+    (.onDidChange invalidate-tasks!)
+    (.onDidCreate invalidate-tasks!)
+    (.onDidDelete invalidate-tasks!)
+    (subscribe!)))
 
 (defn- provide-tasks [_token]
   (swap! tasks #(or % (find-all-tasks))))
 
+;; TODO: Create a task from a task definition
 (defn- resolve-task [task _token]
   (.log js/console "Asked to resolve" task)
   js/undefined)
 
 (defn- babashka-task-provider []
   #js {:provideTasks provide-tasks
-       :resolveTask resolve-task})
-
-(defn- watch-babashka-files! []
-  (doto (.createFileSystemWatcher vscode/workspace "**/bb.edn")
-    (.onDidChange file-changed)
-    (.onDidCreate file-created)
-    (.onDidDelete file-deleted)
-    (subscribe!)))
+       :resolveTask  resolve-task})
 
 (defn activate [^js ctx]
   (set! *ctx* (bean ctx))
   (watch-babashka-files!)
-  (reset! tasks (find-all-tasks))
-  (subscribe! (.registerTaskProvider vscode/tasks "babashka"
+  (subscribe! (.registerTaskProvider vscode/tasks task-type
                                      (babashka-task-provider))))
 
 (defn deactivate [])
 
-(def exports #js {:activate activate
-                  :deactivate deactivate})
+(def ^:export exports #js {:activate activate
+                           :deactivate deactivate})

@@ -1,11 +1,16 @@
 {
   "name": "babashka-tasks",
   "version": "0.1.0",
+  "displayName": "Babashka Tasks",
   "description": "Run Babashka Tasks from VS-Code.",
   "categories": [
     "Other"
   ],
+  "keywords": ["babashka", "tasks"],
   "main": "dist/babashka-tasks.js",
+  "author": {
+    "name": "Ferdinand Beyer"
+  },
   "publisher": "fbeyer",
   "repository": {
     "type": "git",
@@ -29,11 +34,11 @@
         "properties": {
           "task": {
             "type": "string",
-            "description": "The babashka task to run."
+            "description": "Babashka task to run."
           },
           "file": {
             "type": "string",
-            "description": "The bb.edn file that provides the task."
+            "description": "The bb.edn file that provides the task (optional)."
           }
         },
         "when": "shellExecutionSupported"
