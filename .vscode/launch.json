@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Extension",
+        "type": "extensionHost",
+        "request": "launch",
+        "runtimeExecutable": "${execPath}",
+        "outFiles": ["${workspaceFolder}/dist/**/*.js"],
+        "args": [
+          "--extensionDevelopmentPath=${workspaceFolder}",
+          "--disable-extensions"
+        ],
+        "trace": true
+      }
+    ]
+  }
+  

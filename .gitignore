@@ -1,0 +1,8 @@
+.clj-kondo/
+.cpcache/
+.lsp/
+.portal/
+.shadow-cljs/
+
+dist/
+node_modules/

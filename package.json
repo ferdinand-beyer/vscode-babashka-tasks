@@ -1,0 +1,47 @@
+{
+  "name": "babashka-tasks",
+  "version": "0.1.0",
+  "description": "Run Babashka Tasks from VS-Code.",
+  "categories": [
+    "Other"
+  ],
+  "main": "dist/babashka-tasks.js",
+  "publisher": "fbeyer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ferdinand-beyer/vscode-babashka-tasks"
+  },
+  "icon": "resources/babashka-icon.png",
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "vscode": "^1.22.0"
+  },
+  "activationEvents": [
+    "workspaceContains:**/bb.edn"
+  ],
+  "contributes": {
+    "taskDefinitions": [
+      {
+        "type": "babashka",
+        "required": [
+          "task"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The babashka task to run."
+          },
+          "file": {
+            "type": "string",
+            "description": "The bb.edn file that provides the task."
+          }
+        },
+        "when": "shellExecutionSupported"
+      }
+    ]
+  },
+  "devDependencies": {
+    "shadow-cljs": "2.20.2",
+    "vsce": "^2.11.0"
+  }
+}

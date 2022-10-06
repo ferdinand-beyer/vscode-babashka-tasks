@@ -1,0 +1,9 @@
+{:deps {:aliases [:cljs]}
+ :builds
+ {:extension
+  {:target :node-library
+   :exports-var babashka-tasks.core/exports
+   :compiler-options {:infer-externs true
+                      :warnings-as-errors true}
+   :output-to "dist/babashka-tasks.js"
+   :devtools {:after-load babashka-tasks.core/reload}}}}
