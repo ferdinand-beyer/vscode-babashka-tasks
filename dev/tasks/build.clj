@@ -7,7 +7,7 @@
          (fs/modified-since
           "node_modules"
           ["package.json" "package-lock.json"]))
-    (npm :install)))
+    (npm :ci)))
 
 (defn build []
   (install)
