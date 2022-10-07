@@ -1,6 +1,8 @@
 {:paths ["src" "resources" "dev" "test"]
  :deps {io.aviso/pretty {:mvn/version "1.2"}}
- :tasks {build tasks.build/build
-         dev   {:doc  "Start a development server"
+ :tasks {dev   {:doc  "Start a development server"
                 :task tasks.dev/-main}
+         build tasks.build/build
+         check tasks.check/check
+         fmt   tasks.format/fix
          tag   tasks.version/tag}}
