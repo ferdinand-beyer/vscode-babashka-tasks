@@ -1,8 +1,11 @@
 {:paths ["src" "resources" "dev" "test"]
- :deps {io.aviso/pretty {:mvn/version "1.2"}}
- :tasks {dev   {:doc  "Start a development server"
-                :task tasks.dev/-main}
-         build tasks.build/build
-         check tasks.check/check
-         fmt   tasks.format/fix
-         tag   tasks.version/tag}}
+ :deps {andreacrotti/semver {:mvn/version "0.2.2"}
+        io.aviso/pretty     {:mvn/version "1.2"}}
+ :tasks {dev     {:doc  "Start a development server"
+                  :task tasks.dev/-main}
+         build   tasks.build/build
+         check   tasks.check/check
+         fmt     tasks.format/fix
+         version {:doc  "Set or increment the project version [major | minor | patch | <version>]"
+                  :task tasks.version/-main}
+         tag     tasks.version/tag}}

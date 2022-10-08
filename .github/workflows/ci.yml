@@ -33,13 +33,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: ./.github/actions/setup
-    - id: info
-      run: bb -m tasks.info/github-actions
     - run: bb -m tasks.deploy
       env:
         VSCE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
     - uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ steps.info.outputs.tag }}
+        generate_release_notes: true
         files: |
           *.vsix
