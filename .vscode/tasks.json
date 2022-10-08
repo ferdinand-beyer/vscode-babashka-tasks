@@ -2,11 +2,14 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "Build",
 			"type": "babashka",
-			"task": "dev",
+			"task": "build",
 			"problemMatcher": [],
-			"label": "babashka: dev",
-			"detail": "Start a development server"
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
 		}
 	]
 }

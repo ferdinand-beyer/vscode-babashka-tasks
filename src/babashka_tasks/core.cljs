@@ -8,8 +8,7 @@
 
 (def task-type "babashka")
 
-(defn ^:export reload
-  []
+(defn ^:export reload []
   (j/call js/console :log "Reloading...")
   (js-delete js/require.cache (js/require.resolve "./babashka-tasks")))
 
@@ -21,7 +20,7 @@
 
 (def ^:dynamic *ctx* nil)
 
-(defn- subscribe! [disposable]
+(defn- manage! [disposable]
   (j/push! (j/get *ctx* :subscriptions) disposable))
 
 (defn- make-execution [file task-name]
@@ -49,8 +48,8 @@
   (when (map? task)
     (:doc task)))
 
-(defn- load-bb-edn [folder uri data]
-  (for [[sym task] (:tasks data)
+(defn- bb-edn-tasks [folder uri config]
+  (for [[sym task] (:tasks config)
         :when (symbol? sym)
         :let  [task-name (name sym)]
         :when (not (str/starts-with? task-name "-"))]
@@ -58,7 +57,7 @@
 
 (defn- read-file [folder uri]
   (-> (j/call-in vscode/workspace [:fs :readFile] uri)
-      (p/then #(->> % decode-text edn/read-string (load-bb-edn folder uri)))
+      (p/then #(->> % decode-text edn/read-string (bb-edn-tasks folder uri)))
       (p/catch log-error)))
 
 (defn- pmapcat [f collp]
@@ -77,16 +76,16 @@
 
 (def tasks (atom nil))
 
-(defn- invalidate-tasks! [_uri]
+(defn- clear-tasks! [_uri]
   (reset! tasks nil))
 
 ;; TODO: Smarter updates?
 (defn- watch-babashka-files! []
   (doto (j/call vscode/workspace :createFileSystemWatcher "**/bb.edn")
-    (j/call :onDidChange invalidate-tasks!)
-    (j/call :onDidCreate invalidate-tasks!)
-    (j/call :onDidDelete invalidate-tasks!)
-    (subscribe!)))
+    (j/call :onDidChange clear-tasks!)
+    (j/call :onDidCreate clear-tasks!)
+    (j/call :onDidDelete clear-tasks!)
+    (manage!)))
 
 (defn- provide-tasks [_token]
   (swap! tasks #(or % (find-all-tasks))))
@@ -101,15 +100,13 @@
                     (make-execution (j/get definition :file) task-name)
                     #js []))))
 
-(defn- babashka-task-provider []
-  #js {:provideTasks provide-tasks
-       :resolveTask  resolve-task})
+(def task-provider #js {:provideTasks provide-tasks
+                        :resolveTask  resolve-task})
 
 (defn activate [^js ctx]
   (set! *ctx* ctx)
   (watch-babashka-files!)
-  (subscribe! (j/call vscode/tasks :registerTaskProvider
-                      task-type (babashka-task-provider))))
+  (manage! (j/call vscode/tasks :registerTaskProvider task-type task-provider)))
 
 (defn deactivate [])
 

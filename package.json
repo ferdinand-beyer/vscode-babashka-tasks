@@ -38,7 +38,7 @@
           },
           "file": {
             "type": "string",
-            "description": "The bb.edn file that provides the task (optional)."
+            "description": "The bb.edn file that provides the task. Can be omitted."
           }
         },
         "when": "shellExecutionSupported"
