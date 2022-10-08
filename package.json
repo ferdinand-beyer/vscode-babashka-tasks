@@ -1,12 +1,15 @@
 {
   "name": "babashka-tasks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Babashka Tasks",
   "description": "Run Babashka Tasks from VS-Code.",
   "categories": [
     "Other"
   ],
-  "keywords": ["babashka", "tasks"],
+  "keywords": [
+    "babashka",
+    "tasks"
+  ],
   "main": "babashka-tasks.js",
   "author": {
     "name": "Ferdinand Beyer"
